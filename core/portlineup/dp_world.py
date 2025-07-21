@@ -4,21 +4,22 @@ import time
 from urllib.parse import urlparse
 from typing import List, Dict
 from utils.config import Config
-from core.field_mappings import FIELD_MAPPINGS
+from utils.field_utils import map_rows_by_site
 
 loggers = Config.init_logging()
 service_logger = loggers['chatservice']
-# core/dp_world.py      
 
 class DpWorldScraper:
-    def __init__(self, url: str):
-
+    def __init__(self, url: str,site_id: str = "dpworld"):
         service_logger.info(f"[INIT] Initializing DpWorldScraper with URL: {url}")
         self.url = url
+        self.site_id = site_id
+        self.scrapped_data=[]
+        self.scrape_type="api"
+
         parsed = urlparse(url)
         self.origin = f"{parsed.scheme}://{parsed.netloc}"
         self.api_url = f"{self.origin}/api/schedule"
-
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                           "(KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
@@ -32,8 +33,7 @@ class DpWorldScraper:
         self.page_size = 20
         service_logger.info(f"[INIT] DpWorldScraper initialized with API URL: {self.api_url}")
 
-    def scrape(self,site_id) -> List[Dict]:
-        all_rows = []
+    def scrape(self) -> List[Dict]:
 
         initial_payload = {
             "ApiName": "VesselSchedule|Caucedo",
@@ -55,7 +55,7 @@ class DpWorldScraper:
             total_pages = math.ceil(total_count / self.page_size)
 
             service_logger.info(f"[SCRAPE] Total records: {total_count}, Total pages: {total_pages}")
-            all_rows.extend(data["table"]["rows"])
+            self.scrapped_data.extend(data["table"]["rows"])
 
             for page in range(1, total_pages):
                 payload = initial_payload.copy()
@@ -68,7 +68,7 @@ class DpWorldScraper:
 
                 rows = page_data.get("table", {}).get("rows", [])
                 service_logger.debug(f"[SCRAPE] Page {page + 1} returned {len(rows)} rows")
-                all_rows.extend(rows)
+                self.scrapped_data.extend(rows)
 
                 time.sleep(0.5)  # Polite delay
 
@@ -84,11 +84,6 @@ class DpWorldScraper:
             service_logger.error(f"[SCRAPE ERROR] Unexpected error: {str(e)}")
             raise
 
-        mapping = FIELD_MAPPINGS.get(site_id, {})
-        mapped_rows = [
-            {standard_key: row.get(original_key) for original_key, standard_key in mapping.items()}
-            for row in all_rows
-        ]
-
-        service_logger.info(f"[SCRAPE COMPLETE] Total vessels scraped: {len(mapped_rows)}")
-        return mapped_rows
+        mapped_data = map_rows_by_site(self.site_id, self.scrapped_data)
+        service_logger.info(f"[SCRAPE COMPLETE] Total vessels scraped: {len(mapped_data)}")
+        return mapped_data,self.scrape_type

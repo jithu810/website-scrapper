@@ -4,9 +4,9 @@ from utils.status_codes import HttpStatusCodes
 from utils.timer import Timer
 from utils.response_utils import response as _response
 from interceptors.request_id_interceptor import request_id_ctx
-from core.myshiptracking_scraper import MyShipTrackingScraper
-from core.vesselfinder_scraper import VesselfinderScraper
-from core.vesseltracker_scraper import VesselTrackerScraper
+from core.vessels.myshiptracking_scraper import MyShipTrackingScraper
+from core.vessels.vesselfinder_scraper import VesselfinderScraper
+from core.vessels.vesseltracker_scraper import VesselTrackerScraper
 
 loggers = Config.init_logging()
 
@@ -15,7 +15,7 @@ service_logger = loggers['chatservice']
 SCRAPER_MAP = {
     "myship": MyShipTrackingScraper,
     "vesselfinder": VesselfinderScraper,
-    "vesseltracker": VesselTrackerScraper 
+    "vesseltracker": VesselTrackerScraper,
 }
 
 class WebScraperProcessor:

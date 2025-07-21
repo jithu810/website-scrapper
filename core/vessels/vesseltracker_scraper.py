@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 
 from core.scrapers.base_scraper import BaseScraper
 from utils.constants import DRIVER_PATH
-from core.field_mappings_port import FIELD_MAPPINGS
+from core.field_mappings_vessel import FIELD_MAPPINGS
 from utils.config import Config
 
 loggers = Config.init_logging()

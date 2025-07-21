@@ -7,7 +7,7 @@ import time
 
 from utils.constants import DRIVER_PATH
 from core.scrapers.base_scraper import BaseScraper
-from core.field_mappings_port import FIELD_MAPPINGS
+from core.field_mappings_vessel import FIELD_MAPPINGS
 
 class MyShipTrackingScraper(BaseScraper):
     def __init__(self, url, site_id="myship"):

@@ -5,15 +5,19 @@ from utils.status_codes import HttpStatusCodes
 from utils.timer import Timer
 from utils.response_utils import response as _response
 from interceptors.request_id_interceptor import request_id_ctx
-from core.dp_world import DpWorldScraper
-from core.portlineup.webapp import WebappScraper  # Assuming this is the correct import for webapps
+from core.portlineup.dp_world import DpWorldScraper
+from core.portlineup.webapp_abudhabi import WebappScraper  # Assuming this is the correct import for webapps
+from core.portlineup.salalahport import SalalahScraper  # Assuming this is the correct import for Salalah port
+from core.portlineup.fujairahport import FujairahPort
 
 loggers = Config.init_logging()
 service_logger = loggers['chatservice']
 
 SCRAPER_MAP = {
-    "dpworld": DpWorldScraper, 
-    "webapps": WebappScraper  
+    "dpworld": DpWorldScraper,
+    "webapps_abudhabi": WebappScraper,
+    "salalahport": SalalahScraper,
+    "fujairahport":FujairahPort
 }
 
 class PortLineupProcessor:
@@ -46,7 +50,10 @@ class PortLineupProcessor:
         try:
             with Timer() as total_timer:
                 scraper = scraper_class(self.url)
-                data = scraper.scrape(self.site_id)
+                data,scrape_type = scraper.scrape()
+                service_logger.info(f"[Len VAL] length of the data: {len(data[0])}")
+
+            data={"URL":self.url,"scrape_type":scrape_type,"data":data}
 
             return {
                 "status_code": HttpStatusCodes.OK,
@@ -54,8 +61,7 @@ class PortLineupProcessor:
                 "remarks": SuccessMessages.PROCESSED_SUCCESSFULLY,
                 "data": {
                     "QueryId": self.query_id,
-                    "ScrapedFrom": self.site_id,
-                    "Extracted": data,
+                    "data": data,
                     "Time": f"{total_timer.interval:.2f}s"
                 }
             }
