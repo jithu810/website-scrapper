@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from utils.constants import DRIVER_PATH
 from utils.config import Config
 from utils.field_utils import map_rows_by_site
+from utils.options import ChromeOptionsBuilder  
 
 loggers = Config.init_logging()
 service_logger = loggers['chatservice']
@@ -19,12 +20,8 @@ class FujairahPort:
         self.site_id = site_id
         self.scrapped_data=[]
         self.scrape_type="selenium"
-
-        self.options = Options()
-        self.options.add_argument("--window-size=1920,1080")
-        self.options.add_argument("--disable-dev-shm-usage")
-        self.options.add_argument("--no-sandbox")
-        self.options.add_argument("user-agent=Mozilla/5.0")
+        self.mapping_type="port"
+        self.options = ChromeOptionsBuilder().get_options()
 
     def scrape(self) -> List[Dict]:
         driver = webdriver.Chrome(service=Service(DRIVER_PATH), options=self.options)
@@ -57,8 +54,8 @@ class FujairahPort:
                     headers[i]: cols[i].get_text(strip=True) for i in range(len(headers))
                 })
 
-            mapped_data = map_rows_by_site(self.site_id, self.scrapped_data)
-            service_logger.info(f"[SCRAPE COMPLETE] Total mapped vessels: {len(mapped_data)}")
+            mapped_data = map_rows_by_site(self.site_id, self.scrapped_data,mapping_type=self.mapping_type)
+            service_logger.info(f"[SCRAPE COMPLETE] Total mapped vessels: {len(mapped_data[0])}")
             return mapped_data,self.scrape_type
         finally:
             driver.quit()

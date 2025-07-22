@@ -9,7 +9,6 @@ from core.vessels.vesselfinder_scraper import VesselfinderScraper
 from core.vessels.vesseltracker_scraper import VesselTrackerScraper
 
 loggers = Config.init_logging()
-
 service_logger = loggers['chatservice']
 
 SCRAPER_MAP = {
@@ -48,7 +47,9 @@ class WebScraperProcessor:
         try:
             with Timer() as total_timer:
                 scraper = scraper_class(self.url,self.site_id)
-                data = scraper.scrape()
+                data,scrape_type = scraper.scrape()
+
+            data={"URL":self.url,"scrape_type":scrape_type,"data":data}
 
             return {
                 "status_code": HttpStatusCodes.OK,
@@ -56,8 +57,7 @@ class WebScraperProcessor:
                 "remarks": SuccessMessages.PROCESSED_SUCCESSFULLY,
                 "data": {
                     "QueryId": self.query_id,
-                    "ScrapedFrom": self.site_id,
-                    "Extracted": data,
+                    "data": data,
                     "Time": f"{total_timer.interval:.2f}s"
                 }
             }

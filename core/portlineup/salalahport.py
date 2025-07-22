@@ -10,6 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from utils.constants import DRIVER_PATH
 from utils.config import Config
 from utils.field_utils import map_rows_by_site
+from utils.options import ChromeOptionsBuilder  
 
 loggers = Config.init_logging()
 service_logger = loggers['chatservice']
@@ -20,12 +21,8 @@ class SalalahScraper:
         self.site_id = site_id
         self.scrapped_data=[]
         self.scrape_type="selenium"
-
-        self.options = Options()
-        self.options.add_argument("--window-size=1920,1080")
-        self.options.add_argument("--disable-dev-shm-usage")
-        self.options.add_argument("--no-sandbox")
-        self.options.add_argument("user-agent=Mozilla/5.0")
+        self.mapping_type="port"
+        self.options = ChromeOptionsBuilder().get_options()
 
     def scrape(self) -> List[Dict]:
         driver = webdriver.Chrome(service=Service(DRIVER_PATH), options=self.options)
@@ -102,7 +99,7 @@ class SalalahScraper:
                     service_logger.error(f" Failed to scrape page {num}: {e}")
 
             service_logger.info(f" Total vessels scraped: {len(self.scrapped_data)}")
-            mapped_data = map_rows_by_site(self.site_id, self.scrapped_data)
+            mapped_data = map_rows_by_site(self.site_id, self.scrapped_data,mapping_type=self.mapping_type)
             service_logger.info(f"[SCRAPE COMPLETE] Total mapped vessels: {len(mapped_data)}")
             return mapped_data,self.scrape_type
         finally:

@@ -5,33 +5,22 @@ from urllib.parse import urlparse
 from typing import List, Dict
 from utils.config import Config
 from utils.field_utils import map_rows_by_site
+from core.scrapers.port_base_scrapper import BaseAPIScraper
 
 loggers = Config.init_logging()
 service_logger = loggers['chatservice']
 
-class DpWorldScraper:
-    def __init__(self, url: str,site_id: str = "dpworld"):
-        service_logger.info(f"[INIT] Initializing DpWorldScraper with URL: {url}")
-        self.url = url
-        self.site_id = site_id
-        self.scrapped_data=[]
-        self.scrape_type="api"
-
-        parsed = urlparse(url)
-        self.origin = f"{parsed.scheme}://{parsed.netloc}"
-        self.api_url = f"{self.origin}/api/schedule"
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-            "Referer": self.url,
-            "Origin": self.origin,
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "Accept": "application/json, text/javascript, */*; q=0.01",
-            "X-Requested-With": "XMLHttpRequest"
-        }
-
+class DpWorldScraper(BaseAPIScraper):
+    def __init__(self, url: str, site_id: str = "dpworld"):
+        super().__init__(url, site_id)
         self.page_size = 20
-        service_logger.info(f"[INIT] DpWorldScraper initialized with API URL: {self.api_url}")
+        self.api_url = f"{self.origin}/api/schedule"
+
+        # You can override headers if needed
+        self.headers.update({
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
+        })
 
     def scrape(self) -> List[Dict]:
 
@@ -84,6 +73,6 @@ class DpWorldScraper:
             service_logger.error(f"[SCRAPE ERROR] Unexpected error: {str(e)}")
             raise
 
-        mapped_data = map_rows_by_site(self.site_id, self.scrapped_data)
+        mapped_data = map_rows_by_site(self.site_id,self.scrapped_data,mapping_type=self.mapping_type)
         service_logger.info(f"[SCRAPE COMPLETE] Total vessels scraped: {len(mapped_data)}")
         return mapped_data,self.scrape_type
